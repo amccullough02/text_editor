@@ -1,6 +1,6 @@
 use crossterm::event::{read, Event, Event::Key, KeyCode::Char, KeyEvent, KeyModifiers};
-use crossterm::terminal::{enable_raw_mode, disable_raw_mode, Clear, ClearType};
-use crossterm::execute;
+use crossterm::terminal::{enable_raw_mode, disable_raw_mode, Clear, ClearType, size};
+use crossterm::{execute, cursor::MoveTo, style::Print};
 use std::io::stdout;
 
 pub struct Editor {
@@ -30,7 +30,21 @@ impl Editor {
 
     fn clear_screen() -> Result<(), std::io::Error> {
         let mut stdout = stdout();
-        execute!(stdout, Clear(ClearType::All))
+        execute!(
+            stdout, 
+            Clear(ClearType::All),
+            MoveTo(0, 0)
+        )?;
+        Self::draw_rows(&mut stdout)
+    }
+
+    fn draw_rows(stdout: &mut std::io::Stdout) -> Result<(), std::io::Error> {
+        let height = size().unwrap().1;
+        for y in 0..height {
+            execute!(stdout, MoveTo(0, y), Print("~"))?;
+        }
+        execute!(stdout, MoveTo(0, 0))?;
+        Ok(())
     }
 
     fn repl(&mut self) -> Result<(), std::io::Error> {
